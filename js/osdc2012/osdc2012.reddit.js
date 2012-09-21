@@ -24,4 +24,10 @@
   'use strict';
 
   var reddit = reddit || {};
+
+  reddit.info = function() {
+    $.ajax({
+      
+    });
+  }
 })();
