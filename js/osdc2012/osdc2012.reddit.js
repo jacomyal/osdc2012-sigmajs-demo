@@ -23,11 +23,37 @@
 (function() {
   'use strict';
 
-  var reddit = reddit || {};
+  window.reddit = new sigma.classes.EventDispatcher();
+  var regexps = [];
 
-  reddit.info = function() {
-    $.ajax({
-      
-    });
-  }
+  reddit.parseURL = function(url) {
+    return {
+      id: url
+    }
+  };
+
+  reddit.comments = function(url, options) {
+    var o = options || {},
+        self = this,
+        urlObj = this.parseURL(url);
+
+    (urlObj.id!==undefined) &&
+      $.ajax({
+        url: 'http://www.reddit.com/r/programming/comments/'+urlObj.id+'.json?jsonp=?',
+        type: 'GET',
+        dataType: 'jsonp',
+        success: function(data){
+          self.dispatch('commentsLoaded',{
+            received: data
+          });
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+          self.dispatch('commentsFailed',{
+            jqXHR: jqXHR,
+            textStatus: textStatus,
+            errorThrown: errorThrown
+          });
+        }
+      });
+  };
 })();
