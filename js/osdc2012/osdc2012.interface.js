@@ -35,40 +35,165 @@
 
     // Instanciate sigma.js:
     var s1 = sigma.init($('.sigma-container')[0]).drawingProperties({
-      defaultEdgeType: 'curve',
+      defaultEdgeType: 'line',
       font: 'Maven Pro',
       defaultLabelSize: 14,
       defaultLabelActiveColor: '#2c4762'
     }).graphProperties({
-      scalingMode: 'inside'
+      scalingMode: 'inside',
+      minNodeSize: 1,
+      maxNodeSize: 10,
+      minEdgeSize: 0.5,
+      maxEdgeSize: 5
     });
 
-    var i, N = 1000, E = 5000;
+    // // Generate random graph:
+    // var i, N = 400, E = 1500;
 
-    for (i = 0; i < N; i++) {
-      var r = Math.random(),
-          t = Math.random() * Math.PI * 2;
-      s1.addNode(i, {
-        'label': 'Node ' + i,
-        'x': Math.cos(t) * r,
-        'y': Math.sin(t) * r,
-        'size': 0.5 + 5 * Math.random(),
-        'color': colors[(Math.random() * 5) | 0]
-      });
+    // for (i = 0; i < N; i++) {
+    //   var r = Math.random(),
+    //       t = Math.random() * Math.PI * 2;
+    //   s1.addNode(i, {
+    //     'label': 'Node ' + i,
+    //     'x': Math.cos(t) * r,
+    //     'y': Math.sin(t) * r,
+    //     'size': 0.5 + 5 * Math.random(),
+    //     'color': colors[(Math.random() * 5) | 0]
+    //   });
 
-      labels.push('Node ' + i);
-    }
+    //   labels.push('Node ' + i);
+    // }
 
-    for (i = 0; i < E; i++) {
-      s1.addEdge(i, Math.random() * N | 0, Math.random() * N | 0);
-    }
+    // for (i = 0; i < E; i++) {
+    //   s1.addEdge(i, Math.random() * N | 0, Math.random() * N | 0);
+    // }
 
     s1.draw();
 
+    reddit.bind('pageCommentsLoaded',function(event){
+      var nodes = {},
+          edges = {},
+          maxNodeAppearance = 1,
+          maxEdgeAppearance = 1,
+          graph = {
+            nodes: [],
+            edges: []
+          };
 
-    // Control panel:     
-    $('div.nodes').text(N + ' nodes');
-    $('div.edges').text(E + ' edges');
+      function parseObject(o,rootNode){
+        if(o.kind==='Listing')
+          return ((o.data||{}).children||[]).forEach(function(o2){
+            parseObject(o2,rootNode);
+          });
+
+        if(
+          !o.kind==='t1' ||
+          o.data===undefined ||
+          o.data.author===undefined
+        )
+          return;
+
+        // Node:
+        var nodeId = 'user_'+o.data.author;
+        if(!nodes[nodeId]){
+          nodes[nodeId] = {
+            id: nodeId,
+            label: o.data.author,
+            color: '#333',
+            x: Math.random(),
+            y: Math.random(),
+            size: o.data.downs,
+            appearances: 0
+          };
+          graph.nodes.push(nodes[nodeId]);
+        }
+
+        nodes[nodeId].appearances++;
+        maxNodeAppearance = Math.max(maxNodeAppearance,nodes[nodeId].appearances);
+
+        // Edge
+        var edgeId = rootNode<nodeId ?
+          rootNode+'->'+nodeId :
+          nodeId+'->'+rootNode;
+        if(!edges[edgeId]){
+          edges[edgeId] = {
+            id: edgeId,
+            source: rootNode,
+            target: nodeId,
+            size: data.downs,
+            appearances: 0
+          };
+          graph.edges.push(edges[edgeId]);
+        }
+
+        edges[edgeId].appearances++;
+        maxEdgeAppearance = Math.max(maxEdgeAppearance,edges[edgeId].appearances);
+
+        parseObject(o.data.replies,nodeId);
+      }
+
+      // Set root of the graph as the page itself
+      var data = event.content.comments[0].data.children[0].data,
+          author = data.author,
+          id = 'user_'+author;
+
+      nodes[id] = {
+        id: id,
+        label: data.author,
+        color: '#333',
+        x: Math.random(),
+        y: Math.random(),
+        size: data.downs,
+        appearances: 1
+      };
+      graph.nodes.push(nodes[id]);
+
+      // Start parsing data:
+      parseObject(event.content.comments[1],id);
+
+      // Adapt sizes / colors:
+      graph.edges.forEach(function(edge){
+        edge.color = osdc2012.color.newHex(
+          '#AEE8BC',
+          edge.appearances / maxEdgeAppearance,
+          '#283634'
+        );
+      });
+
+      graph.nodes.forEach(function(node){
+        node.color = osdc2012.color.newHex(
+          '#AEE8BC',
+          node.appearances / maxNodeAppearance,
+          '#283634'
+        );
+      });
+      
+      osdc2012.graph.set(graph).startForceAtlas2();
+    }).bind('pageCommentsError',function(event){
+      // TODO
+      console.log('failed');
+    });
+
+    //reddit.pageComments('http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/c6c1iti')
+    //reddit.pageComments('http://www.reddit.com/r/funny/comments/10c5vu/these_were_on_the_walls_at_a_beijing_childrens/')
+    reddit.pageComments('http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/')
+
+    function onGraphUpdate() {
+      // Control panel:     
+      $('div.nodes').text(N + ' nodes');
+      $('div.edges').text(E + ' edges');
+
+      $('#search-nodes').smartAutoComplete({
+        source: labels
+      }).bind('itemSelect', function(e) {
+        onAction();
+
+        var node = osdc2012.graph.zoomTo(
+          e.smartAutocompleteData.item.innerText
+        );
+        node && loadTwitterUser(node);
+      });
+    }
 
     $('.contains-icon').mouseover(function() {
       $(this).find('.icon-button').addClass('icon-white');
@@ -76,8 +201,18 @@
       $(this).find('.icon-button').removeClass('icon-white');
     });
 
-    var moveDelay = 80;
-    $('.move-icon').click(function(event) {
+
+
+
+
+
+    /**
+     * NAVIGATION:
+     */
+    var moveDelay = 80,
+        zoomDelay = 2;
+
+    $('.move-icon').bind('click keypress',function(event) {
       var newPos = s1.position();
       switch ($(this).attr('action')) {
         case 'up':
@@ -100,8 +235,7 @@
       return false;
     });
 
-    var zoomDelay = 2;
-    $('.zoom-icon').click(function(event) {
+    $('.zoom-icon').bind('click keypress',function(event) {
       var ratio = s1.position().ratio;
       switch ($(this).attr('action')) {
         case 'in':
@@ -122,42 +256,40 @@
       return false;
     });
 
-    $('.refresh-icon').click(function(event) {
+    $('.refresh-icon').bind('click keypress',function(event) {
       s1.position(0, 0, 1).draw();
 
       event.stopPropagation();
       return false;
     });
 
-
-    // Keyboard controls:
-    function keyPressHandler(e) {
+    $('.sigma-container').keydown(function(e) {
       var newPos = s1.position();
       newPos.ratio = undefined;
 
       switch (e.keyCode) {
         case 38:
-        case 107:
+        case 75:
           newPos.stageY += moveDelay;
           break;
         case 40:
-        case 106:
+        case 74:
           newPos.stageY -= moveDelay;
           break;
         case 37:
-        case 104:
+        case 72:
           newPos.stageX += moveDelay;
           break;
         case 39:
-        case 108:
+        case 76:
           newPos.stageX -= moveDelay;
           break;
-        case 43:
+        case 107:
           newPos.ratio = s1.position().ratio * zoomDelay;
           newPos.stageX = $('.sigma-container').width() / 2;
           newPos.stageY = $('.sigma-container').height() / 2;
           break;
-        case 45:
+        case 109:
           newPos.ratio = s1.position().ratio / zoomDelay;
           newPos.stageX = $('.sigma-container').width() / 2;
           newPos.stageY = $('.sigma-container').height() / 2;
@@ -165,13 +297,13 @@
       }
 
       s1.goTo(newPos.stageX, newPos.stageY, newPos.ratio);
-    }
-
-    $('.sigma-container').mouseover(function(e) {
-      $('body').bind('keypress', keyPressHandler);
-    }).mouseout(function(e) {
-      $('body').unbind('keypress', keyPressHandler);
     });
+
+
+
+
+
+
 
     function onAction() {
       // Make all nodes unactive:
@@ -185,40 +317,6 @@
       onAction();
       e.preventDefault();
     });
-
-    $('#search-nodes').smartAutoComplete({
-      source: labels
-    }).bind('itemSelect', function(e) {
-      onAction();
-
-      var label = e.smartAutocompleteData.item.innerText;
-      var pos0 = s1.position();
-      var node = false;
-
-      // This might be easier to do if the labels are uniques
-      // (then I can use labels as IDs, and directly give the
-      // label to search):
-      s1.iterNodes(function(n) {
-        if (n.label == label) {
-          node = n;
-          n.active = true;
-        }
-      });
-
-      // HACK:
-      // I have a bug on the zoomTo when the ratio is the same than
-      // the actual one:
-      node && s1.position(pos0.stageX, pos0.stageY, pos0.ratio * 0.9999);
-
-      node && s1.zoomTo(
-        node.displayX,
-        node.displayY,
-        s1.mouseProperties('maxRatio')
-      );
-
-      loadTwitterUser(node);
-    });
-
 
     // Node information:
     var usersCache = {};

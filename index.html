@@ -16,6 +16,7 @@
     <script type="text/javascript" src="js/external/bootstrap.min.js"></script>
     <script type="text/javascript" src="js/external/sigma.min.js"></script>
     <script type="text/javascript" src="js/external/sigma.fisheye.js"></script>
+    <script type="text/javascript" src="js/external/sigma.forceatlas2.js"></script>
 
     <!-- Custom -->
     <link href="css/osdc2012.css" rel="stylesheet">
@@ -40,7 +41,9 @@
 
       <div class="row">
         <div class="span10 offset1 sigma-parent">
-          <div class="sigma-container"></div>
+          <div class="sigma-container" tabindex="0">
+            <div class="keyboard-on">(Keyboard enabled)</div>
+          </div>
           <div class="sigma-control-panel">
             <div class="node-info-container">
               <div class="node-main-container">
@@ -62,29 +65,29 @@
                 </div>
               </fieldset>
             </form>
-            <div class="zoom">
-              <div class="contains-icon zoom-icon" action="in" title="Zoom in the graph">
-                <div class="icon-button icon-zoom-in"></div>
-              </div>
-              <div class="contains-icon zoom-icon" action="out" title="Zoom out the graph">
-                <div class="icon-button icon-zoom-out"></div>
-              </div>
-              <div class="contains-icon" action="refresh" title="Reset graph position">
-                <div class="icon-button refresh-icon icon-resize-full"></div>
-              </div>
-            </div>
             <div class="move">
-              <div class="contains-icon move-icon" action="up" title="Move up in the graph">
+              <div class="contains-icon move-icon" tabindex="0" action="up" title="Move up in the graph">
                 <div class="icon-button icon-arrow-up"></div>
               </div>
-              <div class="contains-icon move-icon" action="down" title="Move down in the graph">
-                <div class="icon-button icon-arrow-down"></div>
-              </div>
-              <div class="contains-icon move-icon" action="left" title="Move left in the graph">
+              <div class="contains-icon move-icon" tabindex="0" action="left" title="Move left in the graph">
                 <div class="icon-button icon-arrow-left"></div>
               </div>
-              <div class="contains-icon move-icon" action="right" title="Move right in the graph">
+              <div class="contains-icon move-icon" tabindex="0" action="right" title="Move right in the graph">
                 <div class="icon-button icon-arrow-right"></div>
+              </div>
+              <div class="contains-icon move-icon" tabindex="0" action="down" title="Move down in the graph">
+                <div class="icon-button icon-arrow-down"></div>
+              </div>
+            </div>
+            <div class="zoom">
+              <div class="contains-icon zoom-icon" tabindex="0" action="out" title="Zoom out the graph">
+                <div class="icon-button icon-zoom-out"></div>
+              </div>
+              <div class="contains-icon" tabindex="0" action="refresh" title="Reset graph position">
+                <div class="icon-button refresh-icon icon-resize-full"></div>
+              </div>
+              <div class="contains-icon zoom-icon" tabindex="0" action="in" title="Zoom in the graph">
+                <div class="icon-button icon-zoom-in"></div>
               </div>
             </div>
           </div>

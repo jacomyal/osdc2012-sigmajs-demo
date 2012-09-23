@@ -38,7 +38,7 @@
               return false;
             else
               return {
-                topic: match[1],
+                sub: match[1],
                 postid: match[2],
                 postlabel: match[3],
                 commentid: match[4],
@@ -55,7 +55,7 @@
               return false;
             else
               return {
-                topic: match[1],
+                sub: match[1],
                 postid: match[2],
                 postlabel: match[3]
               };
@@ -94,7 +94,7 @@
 
     (urlObj.postid!==undefined) &&
       $.ajax({
-        url: 'http://www.reddit.com/r/programming/comments/'+urlObj.postid+'.json?jsonp=?',
+        url: 'http://www.reddit.com/r/'+urlObj.sub+'/comments/'+urlObj.postid+'.json?jsonp=?',
         type: 'GET',
         dataType: 'jsonp',
         beforeSend: function(request) {

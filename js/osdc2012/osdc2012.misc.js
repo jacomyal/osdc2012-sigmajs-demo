@@ -34,20 +34,35 @@
   };
 
   /**
-   * -> osdc2012.location
+   * -> osdc2012.permalink
    * A tool to manage the permalink
    */
-  function onHashChange() {
+  var shortcuts = {
+        uid: 'userid',
+        u: 'userlabel',
+        pid: 'pageid',
+        p: 'pagelabel',
+        url: 'entity',
+        m: 'mode'
+      },
+      reversedShortcuts = {};
 
-  }
+  for(var k in shortcuts)
+    reversedShortcuts[shortcuts[k]] = k;
 
   osdc2012.permalink = new sigma.classes.EventDispatcher();
   osdc2012.permalink.init = function() {
     var self = this;
     if('onhashchange' in window){ // If the event is supported:
       window.onhashchange = function() {
+        var o = self.get();
+        for(var k in o)
+          shortcuts[k] ?
+            (osdc2012.properties[shortcuts[k]] = o[k]) :
+            (osdc2012.properties[k] = o[k]);
+
         self.dispatchEvent('hashChange',{
-          values: self.get()
+          values: osdc2012.properties
         });
       };
     }else{                        // If the event is not supported:
@@ -55,8 +70,14 @@
       window.setInterval(function() {
         if(window.location.hash !== storedHash){
           storedHash = window.location.hash;
+          var o = self.get();
+          for(var k in o)
+            shortcuts[k] ?
+              (osdc2012.properties[shortcuts[k]] = o[k]) :
+              (osdc2012.properties[k] = o[k]);
+
           self.dispatchEvent('hashChange',{
-            values: self.get()
+            values: osdc2012.properties
           });
         }
       },100);
@@ -66,7 +87,63 @@
   osdc2012.permalink.get = function() {
     var a = (window.location.hash||'').split(/[?&#]/).filter(function(s){
       return !!s;
+    }).map(function(s){
+      var o = {},
+          a = s.split('=');
+
+      o[a[0]] = a[1];
+      return o;
     });
+  };
+
+  osdc2012.permalink.update = function() {
+    var a = (window.location.hash||'').split(/[?&#]/).filter(function(s){
+      return !!s;
+    }).map(function(s){
+      var o = {},
+          a = s.split('=');
+
+      o[a[0]] = a[1];
+      return o;
+    });
+  };
+
+  /**
+   * -> osdc2012.color
+   * Methods to manipulate colors
+   */
+  osdc2012.color = {
+    hex2rgb: function(hex){
+      if(hex.substr(0,2)=='0x') hex = hex.substr(2);
+      if(hex.substr(0,1)=='#') hex = hex.substr(1);
+      
+      var isShort = hex.length==3;
+      
+      var r = isShort ? hex.substr(0,1)+hex.substr(0,1) : hex.substr(0,2);
+      var g = isShort ? hex.substr(1,1)+hex.substr(1,1) : hex.substr(2,2);
+      var b = isShort ? hex.substr(2,1)+hex.substr(2,1) : hex.substr(4,2);
+      
+      return { 'r': parseInt(r,16), 'g':parseInt(g,16), 'b':parseInt(b,16) };
+    },
+    newRgb: function(c1,percent,c2){
+      return {
+        'r':(c2.r*percent+c1.r*(1-percent)),
+        'g':(c2.g*percent+c1.g*(1-percent)),
+        'b':(c2.b*percent+c1.b*(1-percent))
+      };
+    },
+    print: function(c){
+      return('rgb('+Math.round(c.r)+','+Math.round(c.g)+','+Math.round(c.b)+')');
+    },
+    newHex: function(h1,percent,h2){
+      return osdc2012.color.print(
+        osdc2012.color.newRgb(
+          osdc2012.color.hex2rgb(h1),
+          percent,
+          osdc2012.color.hex2rgb(h2)
+        )
+      );
+    }
   };
 
   /**
@@ -78,20 +155,11 @@
       var k,
           node,
           edge,
-          sigInst,
+          sigInst = this.getInstance(sig),
           res = {
             nodes: [],
             edges: []
           };
-
-      (sig === undefined) &&
-        (sigInst = sigma.instances[1]);
-
-      (sig !== undefined) && (typeof sig === 'object') &&
-        (sigInst = sig);
-
-      (typeof sig === 'string') || (typeof sig === 'string') &&
-        (sigInst = sigma.instances[1]);
 
       // Get nodes:
       sigInst.iterNodes(function(n) {
@@ -124,7 +192,7 @@
           attr: e.attr
         };
 
-        res.edges.push(node);
+        res.edges.push(edge);
         for(k in edge)
           if(edge[k] === undefined)
             delete edge[k];
@@ -133,15 +201,74 @@
       return res;
     },
     set: function(graph, sig, options) {
-      var 
-          node,
+      var node,
           edges,
-          sigInst,
+          sigInst = this.getInstance(sig),
           res = {
             nodes: [],
             edges: []
           };
 
+      // Empty existing graph
+      sigInst.emptyGraph();
+
+      (graph.nodes||[]).forEach(function(n){
+        sigInst.addNode(n.id,n);
+      });
+
+      (graph.edges||[]).forEach(function(e){
+        sigInst.addEdge(e.id,e.source,e.target,e);
+      });
+
+      return sigInst;
+    },
+    zoomTo: function(n, sig, options) {
+      var sigInst = this.getInstance(sig),
+          node;
+
+      if (typeof n === 'string') {
+        n = n;
+      } else if (typeof n === 'object') {
+        n = n.label||'';
+      }
+
+      // This might be easier to do if the labels are uniques
+      // (then I can use labels as IDs, and directly give the
+      // label to search):
+      sigInst.iterNodes(function(n) {
+        if (n.label == label) {
+          node = n;
+          n.active = true;
+        }
+      });
+
+      // HACK:
+      // I have a bug on the zoomTo when the ratio is the same than
+      // the actual one:
+      var pos0 = sigInst.position();
+      node && sigInst.position(pos0.stageX, pos0.stageY, pos0.ratio * 0.9999);
+
+      node && sigInst.zoomTo(
+        node.displayX,
+        node.displayY,
+        sigInst.mouseProperties('maxRatio')
+      );
+
+      return node;
+    },
+    getInstance: function(sig) {
+      var sigInst;
+
+      (sig === undefined) &&
+        (sigInst = sigma.instances[1]);
+
+      (sig !== undefined) && (typeof sig === 'object') &&
+        (sigInst = sig);
+
+      (typeof sig === 'string') || (typeof sig === 'string') &&
+        (sigInst = sigma.instances[1]);
+
+      return sigInst;
     }
   };
 })();
