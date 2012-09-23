@@ -24,26 +24,81 @@
   'use strict';
 
   window.reddit = new sigma.classes.EventDispatcher();
-  var regexps = [];
-
-  reddit.parseURL = function(url) {
-    return {
-      id: url
+  var cache_pageComments = {},
+      cache_userComments = {},
+      regexps = [
+    {
+      // COMMENT PERMALINK:
+      // Examples:
+      //  - http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/c6c1iti
+      regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]*)\/comments\/([^\/]*)\/([^\/]*)\/([^\/]*)\/?/,
+      method: function(match) {
+        if(!match)
+          return false;
+        else
+          return {
+            topic: match[1],
+            postid: match[2],
+            postlabel: match[3],
+            commentid: match[4],
+          };
+      }
     }
+    {
+      // COMMENTS PERMALINK:
+      // Examples:
+      //  - http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/
+      regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]*)\/comments\/([^\/]*)\/([^\/]*)\/?$/,
+      method: function(match) {
+        if(!match)
+          return false;
+        else
+          return {
+            topic: match[1],
+            postid: match[2],
+            postlabel: match[3]
+          };
+      }
+    }
+  ];
+
+  reddit.parseEntity = function(entity) {
+    if(!entity)
+      return {};
+
+    entity = entity.toString();
+    for (var i in regexps) {
+      var o = regexps[i].method(entity.match(regexps[i].regex));
+      if(o)
+        return o;
+    }
+
+    return {};
   };
 
-  reddit.comments = function(url, options) {
+  reddit.pageComments = function(entity, options) {
     var o = options || {},
         self = this,
-        urlObj = this.parseURL(url);
+        urlObj = this.parseEntity(entity);
 
-    (urlObj.id!==undefined) &&
+    if(!urlObj || urlObj.postid===undefined)
+      self.dispatch('pageCommentsLoaded',{
+        received: {}
+      });
+
+    if(cache_pageComments[urlObj.postid]!==undefined)
+      self.dispatch('pageCommentsLoaded',{
+        received: cache_pageComments[urlObj.postid]
+      });
+
+    (urlObj.postid!==undefined) &&
       $.ajax({
-        url: 'http://www.reddit.com/r/programming/comments/'+urlObj.id+'.json?jsonp=?',
+        url: 'http://www.reddit.com/r/programming/comments/'+urlObj.postid+'.json?jsonp=?',
         type: 'GET',
         dataType: 'jsonp',
         success: function(data){
-          self.dispatch('commentsLoaded',{
+          cache_pageComments[urlObj.postid] = data;
+          self.dispatch('pageCommentsLoaded',{
             received: data
           });
         },
