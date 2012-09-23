@@ -71,6 +71,9 @@
     s1.draw();
 
     reddit.bind('pageCommentsLoaded',function(event){
+      var merge = true,
+          displayCenter = true;
+
       var nodes = {},
           edges = {},
           maxNodeAppearance = 1,
@@ -82,19 +85,21 @@
 
       function parseObject(o,rootNode){
         if(o.kind==='Listing')
-          return ((o.data||{}).children||[]).forEach(function(o2){
-            parseObject(o2,rootNode);
+          return ((o.data||{}).children||[]).map(function(o2){
+            return parseObject(o2,rootNode);
           });
 
         if(
-          !o.kind==='t1' ||
+          //!o.kind==='t1' ||
           o.data===undefined ||
           o.data.author===undefined
         )
           return;
 
         // Node:
-        var nodeId = 'user_'+o.data.author;
+        var nodeId = merge ?
+          'user_'+o.data.author :
+          o.data.id+'|'+o.data.author;
         if(!nodes[nodeId]){
           nodes[nodeId] = {
             id: nodeId,
@@ -112,59 +117,52 @@
         maxNodeAppearance = Math.max(maxNodeAppearance,nodes[nodeId].appearances);
 
         // Edge
-        var edgeId = rootNode<nodeId ?
-          rootNode+'->'+nodeId :
-          nodeId+'->'+rootNode;
-        if(!edges[edgeId]){
-          edges[edgeId] = {
-            id: edgeId,
-            source: rootNode,
-            target: nodeId,
-            size: data.downs,
-            appearances: 0
-          };
-          graph.edges.push(edges[edgeId]);
+        if(rootNode){
+          var edgeId = rootNode<nodeId ?
+            rootNode+'->'+nodeId :
+            nodeId+'->'+rootNode;
+          if(!edges[edgeId]){
+            edges[edgeId] = {
+              id: edgeId,
+              source: rootNode,
+              target: nodeId,
+              size: o.data.downs,
+              appearances: 0
+            };
+            graph.edges.push(edges[edgeId]);
+          }
+
+          edges[edgeId].appearances++;
+          maxEdgeAppearance = Math.max(maxEdgeAppearance,edges[edgeId].appearances);
         }
 
-        edges[edgeId].appearances++;
-        maxEdgeAppearance = Math.max(maxEdgeAppearance,edges[edgeId].appearances);
+        o.data.replies && parseObject(o.data.replies,nodeId);
 
-        parseObject(o.data.replies,nodeId);
+        return nodes[nodeId];
       }
 
-      // Set root of the graph as the page itself
-      var data = event.content.comments[0].data.children[0].data,
-          author = data.author,
-          id = 'user_'+author;
-
-      nodes[id] = {
-        id: id,
-        label: data.author,
-        color: '#333',
-        x: Math.random(),
-        y: Math.random(),
-        size: data.downs,
-        appearances: 1
-      };
-      graph.nodes.push(nodes[id]);
-
       // Start parsing data:
-      parseObject(event.content.comments[1],id);
+      var root = displayCenter ?
+        (parseObject(event.content.comments[0]) || [])[0] :
+        {};
+      parseObject(event.content.comments[1],root.id);
 
       // Adapt sizes / colors:
       graph.edges.forEach(function(edge){
+        edge.size = edge.appearances;
         edge.color = osdc2012.color.newHex(
-          '#AEE8BC',
-          edge.appearances / maxEdgeAppearance,
-          '#283634'
+          '#ddd',
+          (edge.appearances-1) / ((maxEdgeAppearance-1) || 1),
+          '#111'
         );
       });
 
       graph.nodes.forEach(function(node){
+        node.size = node.appearances;
         node.color = osdc2012.color.newHex(
-          '#AEE8BC',
-          node.appearances / maxNodeAppearance,
-          '#283634'
+          '#ddd',
+          (node.appearances-1) / ((maxNodeAppearance-1) || 1),
+          '#111'
         );
       });
       
@@ -177,6 +175,7 @@
     //reddit.pageComments('http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/c6c1iti')
     //reddit.pageComments('http://www.reddit.com/r/funny/comments/10c5vu/these_were_on_the_walls_at_a_beijing_childrens/')
     reddit.pageComments('http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/')
+    //reddit.userPages('http://www.reddit.com/user/Cataliades/submitted.json');
 
     function onGraphUpdate() {
       // Control panel:     

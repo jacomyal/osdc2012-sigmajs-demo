@@ -27,6 +27,7 @@
   var userAgent = 'exploring reddit with sigma.js (for a talk for OSDC2012 fr)',
       cache_pageComments = {},
       cache_userComments = {},
+      cache_userOverview = {},
       regexps = [
         {
           // COMMENT PERMALINK:
@@ -58,6 +59,20 @@
                 sub: match[1],
                 postid: match[2],
                 postlabel: match[3]
+              };
+          }
+        },
+        {
+          // USER PERMALINK:
+          // Examples:
+          //  - http://www.reddit.com/user/Cataliades
+          regex: /^https?:\/\/(?:www\.)?reddit\.com\/user\/([^\/]*)\/?/,
+          method: function(match) {
+            if(!match)
+              return false;
+            else
+              return {
+                userid: match[1]
               };
           }
         }
@@ -94,7 +109,7 @@
 
     (urlObj.postid!==undefined) &&
       $.ajax({
-        url: 'http://www.reddit.com/r/'+urlObj.sub+'/comments/'+urlObj.postid+'.json?jsonp=?',
+        url: 'http://www.reddit.com/comments/'+urlObj.postid+'.json?jsonp=?',
         type: 'GET',
         dataType: 'jsonp',
         beforeSend: function(request) {
@@ -147,6 +162,45 @@
         },
         error: function(jqXHR, textStatus, errorThrown){
           return self.dispatch('userCommentsFailed',{
+            jqXHR: jqXHR,
+            textStatus: textStatus,
+            errorThrown: errorThrown
+          });
+        }
+      });
+  };
+
+  reddit.userOverview = function(entity, options) {
+    var o = options || {},
+        self = this,
+        urlObj = this.parseEntity(entity);
+
+    if(!urlObj || urlObj.userid===undefined)
+      return self.dispatch('userOverviewLoaded',{
+        overview: {}
+      });
+
+    if(cache_userOverview[urlObj.userid]!==undefined)
+      return self.dispatch('userOverviewLoaded',{
+        overview: cache_userOverview[urlObj.userid]
+      });
+
+    (urlObj.userid!==undefined) &&
+      $.ajax({
+        url: 'www.reddit.com/user/'+urlObj.userid+'/overview.json?jsonp=?',
+        type: 'GET',
+        dataType: 'jsonp',
+        beforeSend: function(request) {
+          request.setRequestHeader('User-Agent',userAgent);
+        },
+        success: function(data){
+          cache_userOverview[urlObj.userid] = data;
+          return self.dispatch('userOverviewLoaded',{
+            overview: data
+          });
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+          return self.dispatch('userOverviewFailed',{
             jqXHR: jqXHR,
             textStatus: textStatus,
             errorThrown: errorThrown
