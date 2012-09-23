@@ -47,6 +47,12 @@
       maxEdgeSize: 5
     });
 
+    // Tweak:
+    // Give focus to sigma-container when sigma is clicked:
+    $('#sigma_mouse_1').click(function(){
+      $('.sigma-container').focus();
+    });
+
     // // Generate random graph:
     // var i, N = 400, E = 1500;
 
@@ -166,33 +172,46 @@
         );
       });
       
-      osdc2012.graph.set(graph).startForceAtlas2();
+      osdc2012.graph.set(graph,s1);
+      s1.startForceAtlas2();
+
+      $('div.nodes').text(s1.getNodesCount() + ' nodes');
+      $('div.edges').text(s1.getEdgesCount() + ' edges');
+
+      $('#search-nodes-fieldset > div').remove();
+      $('<div>' +
+          '<label for="search-nodes">Search a user...</label>' +
+          '<input type="text" autocomplete="off" id="search-nodes"/>' +
+        '</div>').appendTo('#search-nodes-fieldset');
+
+      $('#search-nodes-fieldset #search-nodes').smartAutoComplete({
+        source: graph.nodes.map(function(n){
+          return n.label;
+        })
+      }).bind('itemSelect', function(e) {
+        var label = e.smartAutocompleteData.item.innerText;
+        onAction();
+
+        var node = osdc2012.graph.zoomTo(label);
+        node && loadTwitterUser(node);
+      });
+
+      $('.refresh-icon').click();
     }).bind('pageCommentsError',function(event){
       // TODO
       console.log('failed');
     });
 
     //reddit.pageComments('http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/c6c1iti')
-    //reddit.pageComments('http://www.reddit.com/r/funny/comments/10c5vu/these_were_on_the_walls_at_a_beijing_childrens/')
-    reddit.pageComments('http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/')
-    //reddit.userPages('http://www.reddit.com/user/Cataliades/submitted.json');
+    //reddit.userSubmitted('http://www.reddit.com/user/Cataliades/submitted.json');
+    
+    $('form[name="post-url-form"]').submit(function(e){
+      reddit.pageComments($(this).find('input[type="text"]').attr('value'));
 
-    function onGraphUpdate() {
-      // Control panel:     
-      $('div.nodes').text(N + ' nodes');
-      $('div.edges').text(E + ' edges');
-
-      $('#search-nodes').smartAutoComplete({
-        source: labels
-      }).bind('itemSelect', function(e) {
-        onAction();
-
-        var node = osdc2012.graph.zoomTo(
-          e.smartAutocompleteData.item.innerText
-        );
-        node && loadTwitterUser(node);
-      });
-    }
+      e.stopPropagation();
+      e.preventDefault();
+      return false;
+    });
 
     $('.contains-icon').mouseover(function() {
       $(this).find('.icon-button').addClass('icon-white');
@@ -305,6 +324,8 @@
 
 
     function onAction() {
+      // Stop FA2:
+      s1.stopForceAtlas2();
       // Make all nodes unactive:
       s1.iterNodes(function(n) {
         n.active = false;

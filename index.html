@@ -35,6 +35,13 @@
       <div class="row">
         <div class="span10 offset1 description">
           <p>
+          Please paste bellow the URL of a page of comments from Reddit:
+          </p>
+          <form class="form-search" name="post-url-form">
+            <input type="text" class="input-large search-query" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
+            <button type="submit" class="btn">Fetch the graph</button>
+          </form>
+          <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse adipiscing elementum sagittis. Sed vel libero ac sapien ullamcorper vestibulum. Morbi orci arcu, molestie sit amet lobortis non, blandit eget erat. In euismod consequat lectus quis egestas. Sed sit amet nulla enim. Cras in sem est. Cras et pellentesque lorem. Donec sem urna, gravida et adipiscing in, ultricies non nulla. Vestibulum ultrices, risus eget viverra malesuada, nulla elit luctus orci, vel sodales nunc nulla ultrices lacus. Proin ac elit nunc, non pellentesque mi. Aliquam mi nisi, pretium quis euismod eget, vulputate a est. Etiam pretium purus et est euismod faucibus.
           </p>
         </div>
@@ -59,12 +66,7 @@
               </div>
             </div>
             <form action="/" method="post" class="search-nodes-form">
-              <fieldset>
-                <div>
-                  <label for="search-nodes">Search a user...</label>
-                  <input type="text" autocomplete="off" id="search-nodes"/>
-                </div>
-              </fieldset>
+              <fieldset id="search-nodes-fieldset"></fieldset>
             </form>
             <div class="move">
               <div class="contains-icon move-icon" tabindex="0" action="up" title="Move up in the graph">

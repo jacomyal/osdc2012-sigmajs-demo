@@ -28,12 +28,13 @@
       cache_pageComments = {},
       cache_userComments = {},
       cache_userOverview = {},
+      cache_userSubmitted = {},
       regexps = [
         {
           // COMMENT PERMALINK:
           // Examples:
           //  - http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/c6c1iti
-          regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]*)\/comments\/([^\/]*)\/([^\/]*)\/([^\/]*)\/?/,
+          regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]+)\/comments\/([^\/]+)\/([^\/]+)\/([^\/]+)\/?/,
           method: function(match) {
             if(!match)
               return false;
@@ -50,7 +51,7 @@
           // COMMENTS PERMALINK:
           // Examples:
           //  - http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/
-          regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]*)\/comments\/([^\/]*)\/([^\/]*)\/?$/,
+          regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]+)\/comments\/([^\/]+)\/([^\/]+)\/?$/,
           method: function(match) {
             if(!match)
               return false;
@@ -66,13 +67,29 @@
           // USER PERMALINK:
           // Examples:
           //  - http://www.reddit.com/user/Cataliades
-          regex: /^https?:\/\/(?:www\.)?reddit\.com\/user\/([^\/]*)\/?/,
+          regex: /^https?:\/\/(?:www\.)?reddit\.com\/user\/([^\/]+)\/?/,
           method: function(match) {
             if(!match)
               return false;
             else
               return {
                 userid: match[1]
+              };
+          }
+        },
+        {
+          // DEFAULT:
+          // Examples:
+          //  - Cataliades
+          //  - 10b7xo
+          regex: /([^\/]+)/,
+          method: function(match) {
+            if(!match)
+              return false;
+            else
+              return {
+                userid: match[1],
+                postid: match[1]
               };
           }
         }
@@ -201,6 +218,45 @@
         },
         error: function(jqXHR, textStatus, errorThrown){
           return self.dispatch('userOverviewFailed',{
+            jqXHR: jqXHR,
+            textStatus: textStatus,
+            errorThrown: errorThrown
+          });
+        }
+      });
+  };
+
+  reddit.userSubmitted = function(entity, options) {
+    var o = options || {},
+        self = this,
+        urlObj = this.parseEntity(entity);
+
+    if(!urlObj || urlObj.userid===undefined)
+      return self.dispatch('userSubmittedLoaded',{
+        submitted: {}
+      });
+
+    if(cache_userSubmitted[urlObj.userid]!==undefined)
+      return self.dispatch('userSubmittedLoaded',{
+        submitted: cache_userSubmitted[urlObj.userid]
+      });
+
+    (urlObj.userid!==undefined) &&
+      $.ajax({
+        url: 'www.reddit.com/user/'+urlObj.userid+'/submitted.json?jsonp=?',
+        type: 'GET',
+        dataType: 'jsonp',
+        beforeSend: function(request) {
+          request.setRequestHeader('User-Agent',userAgent);
+        },
+        success: function(data){
+          cache_userSubmitted[urlObj.userid] = data;
+          return self.dispatch('userSubmittedLoaded',{
+            submitted: data
+          });
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+          return self.dispatch('userSubmittedFailed',{
             jqXHR: jqXHR,
             textStatus: textStatus,
             errorThrown: errorThrown

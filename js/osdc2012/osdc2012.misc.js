@@ -222,21 +222,21 @@
 
       return sigInst;
     },
-    zoomTo: function(n, sig, options) {
+    zoomTo: function(v, sig, options) {
       var sigInst = this.getInstance(sig),
           node;
 
-      if (typeof n === 'string') {
-        n = n;
-      } else if (typeof n === 'object') {
-        n = n.label||'';
+      if (typeof v === 'string') {
+        v = v;
+      } else if (typeof v === 'object') {
+        v = v.label||'';
       }
 
       // This might be easier to do if the labels are uniques
       // (then I can use labels as IDs, and directly give the
       // label to search):
       sigInst.iterNodes(function(n) {
-        if (n.label == label) {
+        if (n.label == v) {
           node = n;
           n.active = true;
         }
