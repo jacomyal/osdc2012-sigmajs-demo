@@ -315,6 +315,13 @@
       }
 
       s1.goTo(newPos.stageX, newPos.stageY, newPos.ratio);
+
+      e.stopPropagation();
+      return false;
+    }).focus(function(){
+      s1.stopForceAtlas2();
+    }).blur(function(){
+      s1.startForceAtlas2();
     });
 
 
@@ -324,8 +331,6 @@
 
 
     function onAction() {
-      // Stop FA2:
-      s1.stopForceAtlas2();
       // Make all nodes unactive:
       s1.iterNodes(function(n) {
         n.active = false;
