@@ -95,6 +95,105 @@
         }
       ];
 
+  function getGraph(data) {
+    var merge = true,
+        displayCenter = true;
+
+    var nodes = {},
+        edges = {},
+        maxNodeAppearance = 1,
+        maxEdgeAppearance = 1,
+        graph = {
+          nodes: [],
+          edges: []
+        };
+
+    function parseObject(o,rootNode){
+      if(o.kind==='Listing')
+        return ((o.data||{}).children||[]).map(function(o2){
+          return parseObject(o2,rootNode);
+        });
+
+      if(
+        //!o.kind==='t1' ||
+        o.data===undefined ||
+        o.data.author===undefined
+      )
+        return;
+
+      // Node:
+      var nodeId = merge ?
+        'user_'+o.data.author :
+        o.data.id+'|'+o.data.author;
+      if(!nodes[nodeId]){
+        nodes[nodeId] = {
+          id: nodeId,
+          label: o.data.author,
+          color: '#333',
+          x: Math.random(),
+          y: Math.random(),
+          size: o.data.downs,
+          appearances: 0
+        };
+        graph.nodes.push(nodes[nodeId]);
+      }
+
+      nodes[nodeId].appearances++;
+      maxNodeAppearance = Math.max(maxNodeAppearance,nodes[nodeId].appearances);
+
+      // Edge
+      if(rootNode){
+        var edgeId = rootNode<nodeId ?
+          rootNode+'->'+nodeId :
+          nodeId+'->'+rootNode;
+        if(!edges[edgeId]){
+          edges[edgeId] = {
+            id: edgeId,
+            source: rootNode,
+            target: nodeId,
+            size: o.data.downs,
+            appearances: 0
+          };
+          graph.edges.push(edges[edgeId]);
+        }
+
+        edges[edgeId].appearances++;
+        maxEdgeAppearance = Math.max(maxEdgeAppearance,edges[edgeId].appearances);
+      }
+
+      o.data.replies && parseObject(o.data.replies,nodeId);
+
+      return nodes[nodeId];
+    }
+
+    // Start parsing data:
+    var root = displayCenter ?
+      (parseObject(data[0]) || [])[0] :
+      {};
+    parseObject(data[1],root.id);
+
+    // Adapt sizes / colors:
+    graph.edges.forEach(function(edge){
+      edge.size = edge.appearances;
+      edge.color = osdc2012.color.newHex(
+        '#ddd',
+        (edge.appearances-1) / ((maxEdgeAppearance-1) || 1),
+        '#111'
+      );
+    });
+
+    graph.nodes.forEach(function(node){
+      node.size = node.appearances;
+      node.color = osdc2012.color.newHex(
+        '#ddd',
+        (node.appearances-1) / ((maxNodeAppearance-1) || 1),
+        '#111'
+      );
+    });
+
+    return graph;
+  }
+
   reddit.parseEntity = function(entity) {
     if(!entity)
       return {};
@@ -116,12 +215,12 @@
 
     if(!urlObj || urlObj.postid===undefined)
       return self.dispatch('pageCommentsLoaded',{
-        comments: {}
+        graph: {}
       });
 
     if(cache_pageComments[urlObj.postid]!==undefined)
       return self.dispatch('pageCommentsLoaded',{
-        comments: cache_pageComments[urlObj.postid]
+        graph: cache_pageComments[urlObj.postid]
       });
 
     (urlObj.postid!==undefined) &&
@@ -133,9 +232,9 @@
           request.setRequestHeader('User-Agent',userAgent);
         },
         success: function(data){
-          cache_pageComments[urlObj.postid] = data;
+          cache_pageComments[urlObj.postid] = getGraph(data);
           return self.dispatch('pageCommentsLoaded',{
-            comments: data
+            graph: cache_pageComments[urlObj.postid]
           });
         },
         error: function(jqXHR, textStatus, errorThrown){
@@ -148,120 +247,120 @@
       });
   };
 
-  reddit.userComments = function(entity, options) {
-    var o = options || {},
-        self = this,
-        urlObj = this.parseEntity(entity);
+  // reddit.userComments = function(entity, options) {
+  //   var o = options || {},
+  //       self = this,
+  //       urlObj = this.parseEntity(entity);
 
-    if(!urlObj || urlObj.userid===undefined)
-      return self.dispatch('userCommentsLoaded',{
-        comments: {}
-      });
+  //   if(!urlObj || urlObj.userid===undefined)
+  //     return self.dispatch('userCommentsLoaded',{
+  //       comments: {}
+  //     });
 
-    if(cache_userComments[urlObj.userid]!==undefined)
-      return self.dispatch('userCommentsLoaded',{
-        comments: cache_userComments[urlObj.userid]
-      });
+  //   if(cache_userComments[urlObj.userid]!==undefined)
+  //     return self.dispatch('userCommentsLoaded',{
+  //       comments: cache_userComments[urlObj.userid]
+  //     });
 
-    (urlObj.userid!==undefined) &&
-      $.ajax({
-        url: 'www.reddit.com/user/'+urlObj.userid+'/comments.json?jsonp=?',
-        type: 'GET',
-        dataType: 'jsonp',
-        beforeSend: function(request) {
-          request.setRequestHeader('User-Agent',userAgent);
-        },
-        success: function(data){
-          cache_userComments[urlObj.userid] = data;
-          return self.dispatch('userCommentsLoaded',{
-            comments: data
-          });
-        },
-        error: function(jqXHR, textStatus, errorThrown){
-          return self.dispatch('userCommentsFailed',{
-            jqXHR: jqXHR,
-            textStatus: textStatus,
-            errorThrown: errorThrown
-          });
-        }
-      });
-  };
+  //   (urlObj.userid!==undefined) &&
+  //     $.ajax({
+  //       url: 'www.reddit.com/user/'+urlObj.userid+'/comments.json?jsonp=?',
+  //       type: 'GET',
+  //       dataType: 'jsonp',
+  //       beforeSend: function(request) {
+  //         request.setRequestHeader('User-Agent',userAgent);
+  //       },
+  //       success: function(data){
+  //         cache_userComments[urlObj.userid] = data;
+  //         return self.dispatch('userCommentsLoaded',{
+  //           comments: data
+  //         });
+  //       },
+  //       error: function(jqXHR, textStatus, errorThrown){
+  //         return self.dispatch('userCommentsFailed',{
+  //           jqXHR: jqXHR,
+  //           textStatus: textStatus,
+  //           errorThrown: errorThrown
+  //         });
+  //       }
+  //     });
+  // };
 
-  reddit.userOverview = function(entity, options) {
-    var o = options || {},
-        self = this,
-        urlObj = this.parseEntity(entity);
+  // reddit.userOverview = function(entity, options) {
+  //   var o = options || {},
+  //       self = this,
+  //       urlObj = this.parseEntity(entity);
 
-    if(!urlObj || urlObj.userid===undefined)
-      return self.dispatch('userOverviewLoaded',{
-        overview: {}
-      });
+  //   if(!urlObj || urlObj.userid===undefined)
+  //     return self.dispatch('userOverviewLoaded',{
+  //       overview: {}
+  //     });
 
-    if(cache_userOverview[urlObj.userid]!==undefined)
-      return self.dispatch('userOverviewLoaded',{
-        overview: cache_userOverview[urlObj.userid]
-      });
+  //   if(cache_userOverview[urlObj.userid]!==undefined)
+  //     return self.dispatch('userOverviewLoaded',{
+  //       overview: cache_userOverview[urlObj.userid]
+  //     });
 
-    (urlObj.userid!==undefined) &&
-      $.ajax({
-        url: 'www.reddit.com/user/'+urlObj.userid+'/overview.json?jsonp=?',
-        type: 'GET',
-        dataType: 'jsonp',
-        beforeSend: function(request) {
-          request.setRequestHeader('User-Agent',userAgent);
-        },
-        success: function(data){
-          cache_userOverview[urlObj.userid] = data;
-          return self.dispatch('userOverviewLoaded',{
-            overview: data
-          });
-        },
-        error: function(jqXHR, textStatus, errorThrown){
-          return self.dispatch('userOverviewFailed',{
-            jqXHR: jqXHR,
-            textStatus: textStatus,
-            errorThrown: errorThrown
-          });
-        }
-      });
-  };
+  //   (urlObj.userid!==undefined) &&
+  //     $.ajax({
+  //       url: 'www.reddit.com/user/'+urlObj.userid+'/overview.json?jsonp=?',
+  //       type: 'GET',
+  //       dataType: 'jsonp',
+  //       beforeSend: function(request) {
+  //         request.setRequestHeader('User-Agent',userAgent);
+  //       },
+  //       success: function(data){
+  //         cache_userOverview[urlObj.userid] = data;
+  //         return self.dispatch('userOverviewLoaded',{
+  //           overview: data
+  //         });
+  //       },
+  //       error: function(jqXHR, textStatus, errorThrown){
+  //         return self.dispatch('userOverviewFailed',{
+  //           jqXHR: jqXHR,
+  //           textStatus: textStatus,
+  //           errorThrown: errorThrown
+  //         });
+  //       }
+  //     });
+  // };
 
-  reddit.userSubmitted = function(entity, options) {
-    var o = options || {},
-        self = this,
-        urlObj = this.parseEntity(entity);
+  // reddit.userSubmitted = function(entity, options) {
+  //   var o = options || {},
+  //       self = this,
+  //       urlObj = this.parseEntity(entity);
 
-    if(!urlObj || urlObj.userid===undefined)
-      return self.dispatch('userSubmittedLoaded',{
-        submitted: {}
-      });
+  //   if(!urlObj || urlObj.userid===undefined)
+  //     return self.dispatch('userSubmittedLoaded',{
+  //       submitted: {}
+  //     });
 
-    if(cache_userSubmitted[urlObj.userid]!==undefined)
-      return self.dispatch('userSubmittedLoaded',{
-        submitted: cache_userSubmitted[urlObj.userid]
-      });
+  //   if(cache_userSubmitted[urlObj.userid]!==undefined)
+  //     return self.dispatch('userSubmittedLoaded',{
+  //       submitted: cache_userSubmitted[urlObj.userid]
+  //     });
 
-    (urlObj.userid!==undefined) &&
-      $.ajax({
-        url: 'www.reddit.com/user/'+urlObj.userid+'/submitted.json?jsonp=?',
-        type: 'GET',
-        dataType: 'jsonp',
-        beforeSend: function(request) {
-          request.setRequestHeader('User-Agent',userAgent);
-        },
-        success: function(data){
-          cache_userSubmitted[urlObj.userid] = data;
-          return self.dispatch('userSubmittedLoaded',{
-            submitted: data
-          });
-        },
-        error: function(jqXHR, textStatus, errorThrown){
-          return self.dispatch('userSubmittedFailed',{
-            jqXHR: jqXHR,
-            textStatus: textStatus,
-            errorThrown: errorThrown
-          });
-        }
-      });
-  };
+  //   (urlObj.userid!==undefined) &&
+  //     $.ajax({
+  //       url: 'www.reddit.com/user/'+urlObj.userid+'/submitted.json?jsonp=?',
+  //       type: 'GET',
+  //       dataType: 'jsonp',
+  //       beforeSend: function(request) {
+  //         request.setRequestHeader('User-Agent',userAgent);
+  //       },
+  //       success: function(data){
+  //         cache_userSubmitted[urlObj.userid] = data;
+  //         return self.dispatch('userSubmittedLoaded',{
+  //           submitted: data
+  //         });
+  //       },
+  //       error: function(jqXHR, textStatus, errorThrown){
+  //         return self.dispatch('userSubmittedFailed',{
+  //           jqXHR: jqXHR,
+  //           textStatus: textStatus,
+  //           errorThrown: errorThrown
+  //         });
+  //       }
+  //     });
+  // };
 })();

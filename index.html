@@ -28,22 +28,19 @@
   </head>
   <body>
     <div class="container">
-      <div class="row">
+      <div class="row centered">
         <h1 class="title span10 offset1">Explore Reddit network with <span class="sigma">sigma.js</span></h1>
       </div>
 
-      <div class="row">
+      <div class="row centered">
         <div class="span10 offset1 description">
           <p>
           Please paste bellow the URL of a page of comments from Reddit:
           </p>
           <form class="form-search" name="post-url-form">
-            <input type="text" class="input-large search-query" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
+            <input type="text" class="input-xxlarge search-query" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
             <button type="submit" class="btn">Fetch the graph</button>
           </form>
-          <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse adipiscing elementum sagittis. Sed vel libero ac sapien ullamcorper vestibulum. Morbi orci arcu, molestie sit amet lobortis non, blandit eget erat. In euismod consequat lectus quis egestas. Sed sit amet nulla enim. Cras in sem est. Cras et pellentesque lorem. Donec sem urna, gravida et adipiscing in, ultricies non nulla. Vestibulum ultrices, risus eget viverra malesuada, nulla elit luctus orci, vel sodales nunc nulla ultrices lacus. Proin ac elit nunc, non pellentesque mi. Aliquam mi nisi, pretium quis euismod eget, vulputate a est. Etiam pretium purus et est euismod faucibus.
-          </p>
         </div>
       </div>
 
@@ -99,18 +96,15 @@
 
       <div class="row">
         <blockquote class="span10 offset1 explain">
-          <p>The above graph represents the Twitter users that have been tweeting URLs from the front page of Hacker News during last week. Each node represents a Twitter user, and two users are connected if they have cited common URLs.</p>
-          <p>The graph is interactive. You can zoom, and drag and drop the network with the mouse. Also, clicking a node will open a new tab with the related Twitter account.</p>
+          <p>The above graph represents Reddit users who commented the selected Web page. Two user are connected when at least one of them replied to the other.</p>
+          <p>The thickness of an edge is proportional to the number of replies between the two connected users. The size of a user is related to the number of comments he wrote about the selected page.</p>
+          <p>You can navigate through the graph with the arrow keys to move across the graph, +, - to zoom in and out, and the spacebar to reset the graph position.</p>
         </blockquote>
       </div>
 
-      <hr>
-
       <div class="row">
         <div class="span10 offset1 footer">
-          <p class="pull-right"><a href="#">&#8593; Back to top</a></p>
-          <p>This map has been done by <a href="http://twitter.com/#!/straux" target="_blank">Stéphane Raux</a>, <a href="http://twitter.com/#!/nilsgrunwald" target="_blank">Nils Grunwald</a> and <a href="http://twitter.com/#!/jacomyal" target="_blank">Alexis Jacomy</a> from <a href="http://labs.linkfluence.net" target="_blank">Linkfluence</a> - who also provided the data.</p>
-          <p>The graph visualization has been done with <a href="http://gephi.org">Gephi</a>, and the interactive is powered by <span class="sigma"><a href="http://sigmajs.org">sigma.js</a></span>.</p>
+          <p>This <span class="sigma">sigma.js</span> example has been written by <a href="http://twitter.com/#!/jacomyal" target="_blank">Alexis Jacomy</a> from <a href="http://labs.linkfluence.net" target="_blank">Linkfluence</a>, for a presentation at the <a href="osdc.fr/2012" target="_blank">French OSDC 2012</a>.</p>
         </div>
       </div>
     </div>
