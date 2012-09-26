@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSDC 2012 | Explore Reddit network with sigma.js</title>
+    <title>OSDC 2012 | Explore Reddit comments network with sigma.js</title>
 
     <!-- External style and fonts -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -29,13 +29,13 @@
   <body>
     <div class="container">
       <div class="row centered">
-        <h1 class="title span10 offset1">Explore Reddit network with <span class="sigma">sigma.js</span></h1>
+        <h1 class="title span10 offset1">Explore Reddit comments network with <span class="sigma">sigma.js</span></h1>
       </div>
 
       <div class="row centered">
         <div class="span10 offset1 description">
           <p>
-          Please paste bellow the URL of a page of comments from Reddit:
+            Please paste bellow the URL of a page of comments from Reddit:
           </p>
           <form class="form-search" name="post-url-form">
             <input type="text" class="input-xxlarge search-query" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
@@ -48,6 +48,11 @@
         <div class="span10 offset1 sigma-parent">
           <div class="sigma-container" tabindex="0">
             <div class="keyboard-on">(Keyboard enabled)</div>
+            <div id="preloader">
+              <div id="preloader_1" class="preloader"></div>
+              <div id="preloader_2" class="preloader"></div>
+              <div id="preloader_3" class="preloader"></div>
+            </div>
           </div>
           <div class="sigma-control-panel">
             <div class="node-info-container">
@@ -63,7 +68,14 @@
               </div>
             </div>
             <form action="/" method="post" class="search-nodes-form">
-              <fieldset id="search-nodes-fieldset"></fieldset>
+              <fieldset id="search-nodes-fieldset">
+                <div>
+                  <label for="search-nodes">
+                    Search a user...
+                  </label>
+                  <input type="text" autocomplete="off" id="search-nodes"/>
+                </div>
+              </fieldset>
             </form>
             <div class="move">
               <div class="contains-icon move-icon" tabindex="0" action="up" title="Move up in the graph">
@@ -104,7 +116,7 @@
 
       <div class="row">
         <div class="span10 offset1 footer">
-          <p>This <span class="sigma">sigma.js</span> example has been written by <a href="http://twitter.com/#!/jacomyal" target="_blank">Alexis Jacomy</a> from <a href="http://labs.linkfluence.net" target="_blank">Linkfluence</a>, for a presentation at the <a href="osdc.fr/2012" target="_blank">French OSDC 2012</a>.</p>
+          <p>This <span class="sigma">sigma.js</span> example has been written by <a href="http://twitter.com/#!/jacomyal" target="_blank">Alexis Jacomy</a> from <a href="http://labs.linkfluence.net" target="_blank">Linkfluence</a>, for a presentation at the <a href="http://osdc.fr/2012" target="_blank">French OSDC 2012</a>.</p>
         </div>
       </div>
     </div>

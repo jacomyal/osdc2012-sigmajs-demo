@@ -24,6 +24,18 @@
   'use strict';
 
   $(document).ready(function() {
+    // Circular plugin:
+    sigma.publicPrototype.circularize = function() {
+      var R = 100, i = 0, L = this.getNodesCount();
+   
+      this.iterNodes(function(n){
+        n.x = Math.cos(Math.PI*(i++)/L)*R;
+        n.y = Math.sin(Math.PI*(i++)/L)*R;
+      });
+   
+      return this.position(0,0,1).draw();
+    };
+
     // Instanciate sigma.js:
     var s1 = sigma.init($('.sigma-container')[0]).drawingProperties({
       defaultEdgeType: 'line',
@@ -47,8 +59,9 @@
     reddit.bind('pageCommentsLoaded',function(event){
       var graph = event.content.graph;
 
+      s1.stopForceAtlas2();
       osdc2012.graph.set(graph,s1);
-      s1.startForceAtlas2();
+      s1.circularize().startForceAtlas2();
 
       $('div.nodes').text(s1.getNodesCount() + ' nodes');
       $('div.edges').text(s1.getEdgesCount() + ' edges');
@@ -74,8 +87,15 @@
       });
 
       $('.refresh-icon').click();
+      s1.circularize().startForceAtlas2();
     }).bind('pageCommentsError',function(event){
-      console.log('failed');
+      // TODO
+      // console.log('failed');
+    }).bind('startLoading',function(event){
+      $('.sigma-container').addClass('loading');
+      s1.emptyGraph().stopForceAtlas2();
+    }).bind('stopLoading',function(event){
+      $('.sigma-container').removeClass('loading');
     });
 
     $('form[name="post-url-form"]').submit(function(e){

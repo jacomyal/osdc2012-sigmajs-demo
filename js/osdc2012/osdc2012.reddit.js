@@ -26,9 +26,13 @@
   window.reddit = new sigma.classes.EventDispatcher();
   var userAgent = 'exploring reddit with sigma.js (for a talk for OSDC2012 fr)',
       cache_pageComments = {},
-      cache_userComments = {},
-      cache_userOverview = {},
-      cache_userSubmitted = {},
+      // cache_userComments = {},
+      // cache_userOverview = {},
+      // cache_userSubmitted = {},
+      ajax_pageComments = null,
+      // ajax_userComments = null,
+      // ajax_userOverview = null,
+      // ajax_userSubmitted = null,
       regexps = [
         {
           // COMMENT PERMALINK:
@@ -223,21 +227,29 @@
         graph: cache_pageComments[urlObj.postid]
       });
 
-    (urlObj.postid!==undefined) &&
-      $.ajax({
+    if(urlObj.postid!==undefined){
+      self.dispatch('startLoading');
+      ajax_pageComments && ajax_pageComments.abort();
+      ajax_pageComments = $.ajax({
         url: 'http://www.reddit.com/comments/'+urlObj.postid+'.json?jsonp=?',
         type: 'GET',
         dataType: 'jsonp',
-        beforeSend: function(request) {
-          request.setRequestHeader('User-Agent',userAgent);
-        },
+        // beforeSend: function(request) {
+        //   request.setRequestHeader('User-Agent',userAgent);
+        // },
         success: function(data){
           cache_pageComments[urlObj.postid] = getGraph(data);
+
+          ajax_pageComments = null;
+          self.dispatch('stopLoading');
+
           return self.dispatch('pageCommentsLoaded',{
             graph: cache_pageComments[urlObj.postid]
           });
         },
         error: function(jqXHR, textStatus, errorThrown){
+          ajax_pageComments = null;
+
           return self.dispatch('pageCommentsFailed',{
             jqXHR: jqXHR,
             textStatus: textStatus,
@@ -245,6 +257,7 @@
           });
         }
       });
+    }
   };
 
   // reddit.userComments = function(entity, options) {

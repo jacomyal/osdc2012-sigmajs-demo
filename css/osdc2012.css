@@ -144,6 +144,7 @@ div.sigma-container:focus > .keyboard-on{
 }
 div.footer{
   margin-bottom: 40px;
+  text-align: center;
 }
 .sigma{
   font-family: Lobster, Arial, Helvetica, sans-serif;
@@ -177,4 +178,122 @@ ul.smart_autocomplete_container > li{
 ul.smart_autocomplete_container > li.smart_autocomplete_highlight{
   color: #fff;
   background-color: #2c4762;
+}
+div.sigma-container.loading .keyboard-on{
+  display: none;
+}
+input.search-query{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+  
+/* PRELOADER */
+#preloader{
+  position: absolute;
+  width: 116px;
+  margin-left: -58px;
+  left: 50%;
+  height: 26px;
+  top: 50%;
+  margin-top: -13px;
+  display: none;
+  z-index: 1;
+}
+.sigma-container.loading #preloader{
+  display: block;
+}
+.preloader{
+  background-color: #FFFFFF;
+  float: left;
+  height: 25px;
+  margin-left: 13px;
+  width: 25px;
+  -webkit-animation-name: bounce_preloader;
+  -webkit-border-radius: 17px;
+  -webkit-animation-duration: 1.05s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-direction: linear;
+  -moz-animation-name: bounce_preloader;
+  -moz-border-radius: 17px;
+  -moz-animation-duration: 1.05s;
+  -moz-animation-iteration-count: infinite;
+  -moz-animation-direction: linear;
+  opacity: 0.3;
+  -o-animation-name: bounce_preloader;
+  border-radius: 17px;
+  -o-animation-duration: 1.05s;
+  -o-animation-iteration-count: infinite;
+  -o-animation-direction: linear;
+  -ms-animation-name: bounce_preloader;
+  -ms-animation-duration: 1.05s;
+  -ms-animation-iteration-count: infinite;
+  -ms-animation-direction: linear;
+  opacity: 0.3
+}
+#preloader_1{
+  -webkit-animation-delay: 0.21s;
+  -moz-animation-delay: 0.21s;
+  -o-animation-delay: 0.21s;
+  -ms-animation-delay: 0.21s;
+}
+#preloader_2{
+  -webkit-animation-delay: 0.49s;
+  -moz-animation-delay: 0.49s;
+  -o-animation-delay: 0.49s;
+  -ms-animation-delay: 0.49s;
+}
+#preloader_3{
+  -webkit-animation-delay: 0.63s;
+  -moz-animation-delay: 0.63s;
+  -o-animation-delay: 0.63s;
+  -ms-animation-delay: 0.63s;
+}
+@-webkit-keyframes bounce_preloader{
+  0%{
+    opacity: 0.3
+  }
+  50%{
+    opacity: 1;
+    background-color: #8f8f8f
+  }
+  100%{
+    opacity: 0.3
+  }
+}
+@-moz-keyframes bounce_preloader{
+  0%{
+    opacity: 0.3
+  }
+  50%{
+    opacity: 1;
+    background-color: #8f8f8f
+  }
+  100%{
+    opacity: 0.3
+  }
+}
+@-o-keyframes bounce_preloader{
+  0%{
+    opacity: 0.3
+  }
+  50%{
+    opacity: 1;
+    background-color: #8f8f8f
+  }
+  100%{
+    opacity: 0.3
+  }
+}
+@-ms-keyframes bounce_preloader{
+  0%{
+    opacity: 0.3;
+  }
+  50%{
+    opacity: 1;
+    background-color: #8f8f8f;
+  }
+  100%{
+    opacity: 0.3;
+  }
 }
