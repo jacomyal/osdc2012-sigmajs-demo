@@ -112,6 +112,9 @@
       $(this).find('.icon-button').removeClass('icon-white');
     });
 
+    // Init first loading:
+    reddit.pageComments($(this).find('input[type="text"]').attr('value'));
+
     /**
      * NAVIGATION:
      */
