@@ -1,70 +1,76 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSDC 2012 | Explore Reddit comments network with sigma.js</title>
+    <meta charset="utf-8"/>
+    <title>Explore Reddit comments network with sigma.js</title>
 
     <!-- External style and fonts -->
     <link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Maven+Pro:400,700' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Amethysta' rel='stylesheet' type='text/css'>
+    <link href="css/font-awesome.css" rel="stylesheet">
 
     <!-- JavaScript external imports -->
-    <!-- <script type="text/javascript" src="js/external/chroma.min.js"></script> -->
     <script type="text/javascript" src="js/external/jquery.min.js"></script>
     <script type="text/javascript" src="js/external/jquery.smart_autocomplete.min.js"></script>
     <script type="text/javascript" src="js/external/sigma.min.js"></script>
-    <script type="text/javascript" src="js/external/sigma.fisheye.js"></script>
     <script type="text/javascript" src="js/external/sigma.forceatlas2.js"></script>
 
     <!-- Custom -->
-    <link href="css/osdc2012.css" rel="stylesheet">
+    <!-- <link href="css/osdc2012.css" rel="stylesheet"> -->
     <script type="text/javascript" src="js/osdc2012/osdc2012.misc.js"></script>
     <script type="text/javascript" src="js/osdc2012/osdc2012.reddit.js"></script>
     <script type="text/javascript" src="js/osdc2012/osdc2012.interface.js"></script>
 
   </head>
   <body>
-    <div class="container">
-      <div class="row centered">
-        <h1 class="title span10 offset1">Explore Reddit comments network with <span class="sigma">sigma.js</span></h1>
-      </div>
+    <div id="container">
 
-      <div class="centered" id="bannered">
-        <div class="span10 offset1 description">
+      <!-- Title, description, etc... -->
+      <div id="top">
+        <div id="banner">
+          <h1>
+            Explore Reddit comments network with <span class="sigma">sigma.js</span>    
+          </h1>
+        </div>
+        <div class="introduction">
+          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </div>
+        <div class="post-url-container">
           <p>
-            Please paste bellow the URL of a page of comments from Reddit:
+            Please paste bellow the URL of a comments page from Reddit:
           </p>
           <form class="form-search" name="post-url-form">
-            <input type="text" class="input-xxlarge search-query" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
+            <input type="text" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
             <button type="submit" class="btn">Fetch the graph</button>
           </form>
         </div>
       </div>
+      <br>
 
-      <div class="row">
-        <div class="span10 offset1 sigma-parent">
-          <div class="sigma-container" tabindex="0">
-            <div class="keyboard-on">(Keyboard enabled)</div>
-            <div id="preloader">
-              <div id="preloader_1" class="preloader"></div>
-              <div id="preloader_2" class="preloader"></div>
-              <div id="preloader_3" class="preloader"></div>
-            </div>
-          </div>
-          <div class="sigma-control-panel">
+      <!-- Sigma.js container -->
+      <div id="main">
+        <div class="sigma-parent">
+
+          <!-- Here are the canvas elements -->
+          <div class="sigma-container"></div>
+
+          <div class="control-panel">
+
+            <!-- Here are the info about user -->
             <div class="node-info-container">
-              <div class="node-main-container">
-                <div class="node-name node-info"></div>
-              </div>
-              <div class="node-avatar node-info"></div>
-              <div class="node-second-container">
-                <div class="node-followers node-info"></div>
-                <div class="node-following node-info"></div>
-                <div class="node-tweets node-info"></div>
-                <div class="node-score node-info"></div>
+              <div class="node-name node-info"></div>
+              <div class="node-info-secondary">
+                <div class="node-link-karma node-info"></div>
+                <div class="node-comments-karma node-info"></div>
               </div>
             </div>
+
+            <!-- Here is the user search field -->
             <form action="/" method="post" class="search-nodes-form">
               <fieldset id="search-nodes-fieldset">
                 <div>
@@ -75,6 +81,8 @@
                 </div>
               </fieldset>
             </form>
+
+            <!-- And here go all the button to navigate in the graph -->
             <div class="move">
               <div class="contains-icon move-icon" tabindex="0" action="up" title="Move up in the graph">
                 <div class="icon-button icon-arrow-up"></div>
@@ -103,18 +111,12 @@
           </div>
         </div>
       </div>
+      <br>
 
-      <div class="row">
-        <blockquote class="span10 offset1 explain">
-          <p>The above graph represents Reddit users who commented the selected Web page. Two user are connected when at least one of them replied to the other.</p>
-          <p>The thickness of an edge is proportional to the number of replies between the two connected users. The size of a user is related to the number of comments he wrote about the selected page.</p>
-          <p>You can navigate through the graph with the arrow keys to move across the graph, +, - to zoom in and out, and the spacebar to reset the graph position.</p>
-        </blockquote>
-      </div>
-
-      <div class="row">
-        <div class="span10 offset1 footer centered">
-          <p>This <span class="sigma">sigma.js</span> example has been written by <a href="http://twitter.com/#!/jacomyal" target="_blank">Alexis Jacomy</a> from <a href="http://labs.linkfluence.net" target="_blank">Linkfluence</a>, for a presentation at the <a href="http://osdc.fr/2012" target="_blank">French OSDC 2012</a>.</p>
+      <!-- More description, footer, etc... -->
+      <div id="bottom">
+        <div class="footer">
+          This <span class="sigma">sigma.js</span> experiment has been developped by Alexis Jacomy for a talk at the French OSDC 2012.
         </div>
       </div>
     </div>

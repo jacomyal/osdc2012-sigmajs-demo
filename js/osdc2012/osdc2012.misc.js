@@ -125,22 +125,57 @@
       
       return { 'r': parseInt(r,16), 'g':parseInt(g,16), 'b':parseInt(b,16) };
     },
-    newRgb: function(c1,percent,c2){
+    interpolateRGB: function(c1,percent,c2){
       return {
         'r':(c2.r*percent+c1.r*(1-percent)),
         'g':(c2.g*percent+c1.g*(1-percent)),
         'b':(c2.b*percent+c1.b*(1-percent))
       };
     },
-    print: function(c){
+    darken: function(c1,percent){
+      return {
+        'r':(c2.r*percent+c1.r*(1-percent)),
+        'g':(c2.g*percent+c1.g*(1-percent)),
+        'b':(c2.b*percent+c1.b*(1-percent))
+      };
+    },
+    desaturateRGB: function(c1,percent){
+      var m = (c1.r+c1.g+c1.b)/3;
+      return {
+        'r':(m*percent+c1.r*(1-percent)),
+        'g':(m*percent+c1.g*(1-percent)),
+        'b':(m*percent+c1.b*(1-percent))
+      };
+    },
+    componentToHex: function(c){
+      var hex = Math.round(c).toString(16);
+      return hex.length == 1 ? '0' + hex : hex;
+    },
+    printHex: function(c){
+      return(
+        "#" +
+        osdc2012.color.componentToHex(c.r) +
+        osdc2012.color.componentToHex(c.g) +
+        osdc2012.color.componentToHex(c.b)
+      );
+    },
+    printRGB: function(c){
       return('rgb('+Math.round(c.r)+','+Math.round(c.g)+','+Math.round(c.b)+')');
     },
-    newHex: function(h1,percent,h2){
-      return osdc2012.color.print(
-        osdc2012.color.newRgb(
+    interpolate: function(h1,percent,h2){
+      return osdc2012.color.printHex(
+        osdc2012.color.interpolateRGB(
           osdc2012.color.hex2rgb(h1),
           percent,
           osdc2012.color.hex2rgb(h2)
+        )
+      );
+    },
+    desaturate: function(h1,percent){
+      return osdc2012.color.printHex(
+        osdc2012.color.desaturateRGB(
+          osdc2012.color.hex2rgb(h1),
+          percent
         )
       );
     }

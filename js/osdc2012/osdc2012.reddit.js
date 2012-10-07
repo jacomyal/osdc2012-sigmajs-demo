@@ -24,15 +24,10 @@
   'use strict';
 
   window.reddit = new sigma.classes.EventDispatcher();
-  var userAgent = 'exploring reddit with sigma.js (for a talk for OSDC2012 fr)',
-      cache_pageComments = {},
-      // cache_userComments = {},
-      // cache_userOverview = {},
-      // cache_userSubmitted = {},
+  var cache_pageComments = {},
       ajax_pageComments = null,
-      // ajax_userComments = null,
-      // ajax_userOverview = null,
-      // ajax_userSubmitted = null,
+      cache_user = {},
+      ajax_user = null,
       regexps = [
         {
           // COMMENT PERMALINK:
@@ -105,6 +100,10 @@
 
     var nodes = {},
         edges = {},
+        maxRatio,
+        minRatio,
+        maxCounts = 0,
+        minCounts = 0,
         maxNodeAppearance = 1,
         maxEdgeAppearance = 1,
         graph = {
@@ -136,11 +135,17 @@
           color: '#333',
           x: Math.random(),
           y: Math.random(),
-          size: o.data.downs,
+          ups: o.data.ups,
+          downs: o.data.downs,
           appearances: 0
         };
         graph.nodes.push(nodes[nodeId]);
       }
+
+      nodes[nodeId].ups +=+ o.data.ups;
+      nodes[nodeId].downs +=+ o.data.downs;
+      maxCounts = Math.max(maxCounts,nodes[nodeId].downs+nodes[nodeId].ups);
+      minCounts = Math.min(minCounts,nodes[nodeId].downs+nodes[nodeId].ups);
 
       nodes[nodeId].appearances++;
       maxNodeAppearance = Math.max(maxNodeAppearance,nodes[nodeId].appearances);
@@ -176,10 +181,22 @@
       {};
     parseObject(data[1],root.id);
 
+    // Compute minRatio/maxRatio
+    // (cannot be done in the main loop, since it must be based on the final
+    // ratios of the nodes)
+    graph.nodes.forEach(function(node){
+      node.ratio = node.ups - node.downs;
+      maxRatio = Math.max(
+        maxRatio!==undefined ? maxRatio : Math.abs(node.ratio),
+        Math.abs(node.ratio)
+      );
+    });
+    minRatio = -maxRatio;
+
     // Adapt sizes / colors:
     graph.edges.forEach(function(edge){
       edge.size = edge.appearances;
-      edge.color = osdc2012.color.newHex(
+      edge.color = osdc2012.color.interpolate(
         '#ddd',
         (edge.appearances-1) / ((maxEdgeAppearance-1) || 1),
         '#111'
@@ -188,10 +205,15 @@
 
     graph.nodes.forEach(function(node){
       node.size = node.appearances;
-      node.color = osdc2012.color.newHex(
-        '#ddd',
-        (node.appearances-1) / ((maxNodeAppearance-1) || 1),
-        '#111'
+
+      var count = node.ups + node.downs;
+      node.color = osdc2012.color.desaturate(
+        osdc2012.color.interpolate(
+          '#ec5757',
+          (node.ratio - minRatio) / ((maxRatio - minRatio) || 1),
+          '#81cf5a'
+        ),
+        (count - minCounts) / ((maxCounts - minCounts) || 1)
       );
     });
 
@@ -234,9 +256,6 @@
         url: 'http://www.reddit.com/comments/'+urlObj.postid+'.json?jsonp=?',
         type: 'GET',
         dataType: 'jsonp',
-        // beforeSend: function(request) {
-        //   request.setRequestHeader('User-Agent',userAgent);
-        // },
         success: function(data){
           cache_pageComments[urlObj.postid] = getGraph(data);
 
@@ -260,120 +279,47 @@
     }
   };
 
-  // reddit.userComments = function(entity, options) {
-  //   var o = options || {},
-  //       self = this,
-  //       urlObj = this.parseEntity(entity);
+  reddit.user = function(entity, options) {
+    var o = options || {},
+        self = this,
+        urlObj = this.parseEntity(entity);
 
-  //   if(!urlObj || urlObj.userid===undefined)
-  //     return self.dispatch('userCommentsLoaded',{
-  //       comments: {}
-  //     });
+    if(!urlObj || urlObj.userid===undefined)
+      return self.dispatch('userLoaded',{
+        graph: {}
+      });
 
-  //   if(cache_userComments[urlObj.userid]!==undefined)
-  //     return self.dispatch('userCommentsLoaded',{
-  //       comments: cache_userComments[urlObj.userid]
-  //     });
+    if(cache_user[urlObj.userid]!==undefined)
+      return self.dispatch('userLoaded',{
+        graph: cache_user[urlObj.userid]
+      });
 
-  //   (urlObj.userid!==undefined) &&
-  //     $.ajax({
-  //       url: 'www.reddit.com/user/'+urlObj.userid+'/comments.json?jsonp=?',
-  //       type: 'GET',
-  //       dataType: 'jsonp',
-  //       beforeSend: function(request) {
-  //         request.setRequestHeader('User-Agent',userAgent);
-  //       },
-  //       success: function(data){
-  //         cache_userComments[urlObj.userid] = data;
-  //         return self.dispatch('userCommentsLoaded',{
-  //           comments: data
-  //         });
-  //       },
-  //       error: function(jqXHR, textStatus, errorThrown){
-  //         return self.dispatch('userCommentsFailed',{
-  //           jqXHR: jqXHR,
-  //           textStatus: textStatus,
-  //           errorThrown: errorThrown
-  //         });
-  //       }
-  //     });
-  // };
+    if(urlObj.userid!==undefined){
+      ajax_user && ajax_user.abort();
+      ajax_user = $.ajax({
+        url: 'http://www.reddit.com/user/'+urlObj.userid+'/about.json?jsonp=?',
+        type: 'GET',
+        dataType: 'jsonp',
+        success: function(data){
+          cache_user[urlObj.userid] = data;
 
-  // reddit.userOverview = function(entity, options) {
-  //   var o = options || {},
-  //       self = this,
-  //       urlObj = this.parseEntity(entity);
+          ajax_user = null;
+          self.dispatch('stopLoading');
 
-  //   if(!urlObj || urlObj.userid===undefined)
-  //     return self.dispatch('userOverviewLoaded',{
-  //       overview: {}
-  //     });
+          return self.dispatch('userLoaded',{
+            user: cache_user[urlObj.userid]
+          });
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+          ajax_user = null;
 
-  //   if(cache_userOverview[urlObj.userid]!==undefined)
-  //     return self.dispatch('userOverviewLoaded',{
-  //       overview: cache_userOverview[urlObj.userid]
-  //     });
-
-  //   (urlObj.userid!==undefined) &&
-  //     $.ajax({
-  //       url: 'www.reddit.com/user/'+urlObj.userid+'/overview.json?jsonp=?',
-  //       type: 'GET',
-  //       dataType: 'jsonp',
-  //       beforeSend: function(request) {
-  //         request.setRequestHeader('User-Agent',userAgent);
-  //       },
-  //       success: function(data){
-  //         cache_userOverview[urlObj.userid] = data;
-  //         return self.dispatch('userOverviewLoaded',{
-  //           overview: data
-  //         });
-  //       },
-  //       error: function(jqXHR, textStatus, errorThrown){
-  //         return self.dispatch('userOverviewFailed',{
-  //           jqXHR: jqXHR,
-  //           textStatus: textStatus,
-  //           errorThrown: errorThrown
-  //         });
-  //       }
-  //     });
-  // };
-
-  // reddit.userSubmitted = function(entity, options) {
-  //   var o = options || {},
-  //       self = this,
-  //       urlObj = this.parseEntity(entity);
-
-  //   if(!urlObj || urlObj.userid===undefined)
-  //     return self.dispatch('userSubmittedLoaded',{
-  //       submitted: {}
-  //     });
-
-  //   if(cache_userSubmitted[urlObj.userid]!==undefined)
-  //     return self.dispatch('userSubmittedLoaded',{
-  //       submitted: cache_userSubmitted[urlObj.userid]
-  //     });
-
-  //   (urlObj.userid!==undefined) &&
-  //     $.ajax({
-  //       url: 'www.reddit.com/user/'+urlObj.userid+'/submitted.json?jsonp=?',
-  //       type: 'GET',
-  //       dataType: 'jsonp',
-  //       beforeSend: function(request) {
-  //         request.setRequestHeader('User-Agent',userAgent);
-  //       },
-  //       success: function(data){
-  //         cache_userSubmitted[urlObj.userid] = data;
-  //         return self.dispatch('userSubmittedLoaded',{
-  //           submitted: data
-  //         });
-  //       },
-  //       error: function(jqXHR, textStatus, errorThrown){
-  //         return self.dispatch('userSubmittedFailed',{
-  //           jqXHR: jqXHR,
-  //           textStatus: textStatus,
-  //           errorThrown: errorThrown
-  //         });
-  //       }
-  //     });
-  // };
+          return self.dispatch('userFailed',{
+            jqXHR: jqXHR,
+            textStatus: textStatus,
+            errorThrown: errorThrown
+          });
+        }
+      });
+    }
+  };
 })();

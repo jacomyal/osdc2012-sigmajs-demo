@@ -39,9 +39,9 @@
     // Instanciate sigma.js:
     var s1 = sigma.init($('.sigma-container')[0]).drawingProperties({
       defaultEdgeType: 'line',
-      font: 'Maven Pro',
+      font: 'Helvetica, sans-serif',
       defaultLabelSize: 14,
-      defaultLabelActiveColor: '#2c4762'
+      defaultLabelActiveColor: '#333'
     }).graphProperties({
       scalingMode: 'inside',
       minNodeSize: 1,
@@ -83,19 +83,18 @@
         onAction();
 
         var node = osdc2012.graph.zoomTo(label);
-        node && loadTwitterUser(node);
+        node && loadRedditUser(node);
       });
 
       $('.refresh-icon').click();
       s1.circularize().startForceAtlas2();
-    }).bind('pageCommentsError',function(event){
-      // TODO
-      // console.log('failed');
     }).bind('startLoading',function(event){
       $('.sigma-container').addClass('loading');
       s1.emptyGraph().stopForceAtlas2();
     }).bind('stopLoading',function(event){
       $('.sigma-container').removeClass('loading');
+    }).bind('userLoaded',function(event){
+      showRedditUser(event.content.user.data);
     });
 
     $('form[name="post-url-form"]').submit(function(e){
@@ -244,80 +243,46 @@
     });
 
     // Node information:
-    var usersCache = {};
-    function loadTwitterUser(node) {
+    function loadRedditUser(node) {
       hideTwitterUser();
-      var screenName = node['id'];
 
-      if (usersCache[screenName]) {
-        showTwitterUser(usersCache[screenName]);
-      }else {
-        $.ajax({
-          url: 'https://api.twitter.com/1/users/show.json',
-          data: { screen_name: screenName },
-          dataType: 'jsonp',
-          type: 'GET',
-          success: function(data) {
-            data['score'] = node['attr']['score'];
-            usersCache[screenName] = data;
-            showTwitterUser(data);
-          },
-          error: function() {
-            // TODO
-          }
-        });
-      }
+      if(node['label'] !== '[deleted]')
+        reddit.user(node['label']);
+      else
+        showRedditUser();
     }
 
-    function showTwitterUser(obj) {
+    function showRedditUser(obj) {
       hideTwitterUser();
 
-      // Name :
-      $('div.node-info-container .node-name').append(
-        '<h3>' +
-          '<a target="_blank" href="' +
-            'http://twitter.com/' + obj['screen_name'] +
-          '">' +
-          obj['name'] +
-          '</a>' +
-        '</h3>' +
-        (obj['url'] ?
-          '<a target="_blank" href="' + obj['url'] + '">' +
-            obj['url'] +
-          '</a>' :
-          '')
-      );
+      if(obj){
+        // Name :
+        $('div.node-info-container .node-name').append(
+          '<h3>' +
+            '<a target="_blank" href="' +
+              'http://www.reddit.com/user/' + obj['name'] +
+            '">' +
+            obj['name'] +
+            '</a>' +
+          '</h3>'
+        );
 
-      // Avatar :
-      $('div.node-info-container .node-avatar').append(
-        '<img src="' +
-          obj['profile_image_url_https'] +
-        '" width="64px" height="64px" />'
-      );
+        // Link Karma :
+        $('div.node-info-container .node-link-karma').append(
+          'Link karma: ' + obj['link_karma']
+        );
 
-      // Followers :
-      $('div.node-info-container .node-followers').append(
-        obj['followers_count'] +
-          ' follower' +
-          (obj['followers_count'] > 0 ? 's' : '')
-      );
-
-      // Following :
-      $('div.node-info-container .node-following').append(
-        'following ' + obj['friends_count'] + ' people'
-      );
-
-      // Tweets count :
-      $('div.node-info-container .node-tweets').append(
-        obj['statuses_count'] +
-          ' tweet' +
-          (obj['statuses_count'] > 0 ? 's' : '')
-      );
-
-      // Score :
-      $('div.node-info-container .node-score').append(
-        'score : ' + (obj['score'] || '-')
-      );
+        // Comments Karma :
+        $('div.node-info-container .node-comments-karma').append(
+          'Comments karma: ' + obj['comment_karma']
+        );
+      }else{
+        $('div.node-info-container .node-name').append(
+          '<h3>' +
+            'Oops, the requested user has been deleted.' +
+          '</h3>'
+        );
+      }
     }
 
     function hideTwitterUser() {
@@ -334,7 +299,7 @@
       }, [e.content[0]]);
 
       s1.refresh();
-      loadTwitterUser(node);
+      loadRedditUser(node);
     });
   });
 })();
