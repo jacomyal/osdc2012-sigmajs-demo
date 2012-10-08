@@ -16,7 +16,7 @@
     <script type="text/javascript" src="js/external/sigma.forceatlas2.js"></script>
 
     <!-- Custom -->
-    <!-- <link href="css/osdc2012.css" rel="stylesheet"> -->
+    <link href="css/osdc2012.css" rel="stylesheet">
     <script type="text/javascript" src="js/osdc2012/osdc2012.misc.js"></script>
     <script type="text/javascript" src="js/osdc2012/osdc2012.reddit.js"></script>
     <script type="text/javascript" src="js/osdc2012/osdc2012.interface.js"></script>
@@ -32,17 +32,16 @@
             Explore Reddit comments network with <span class="sigma">sigma.js</span>    
           </h1>
         </div>
+        <br>
         <div class="introduction">
-          Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-          tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-          quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-          cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-          proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          <p>The graph bellow represents Reddit users who commented the selected Web page. Two user are connected when at least one of them replied to the other.</p>
+          <p>The thickness of an edge is proportional to the number of replies between the two connected users. The size of a user is related to the number of comments he wrote about the selected page.</p>
+          <p>You can navigate through the graph with the arrow keys to move across the graph, +, - to zoom in and out, and the spacebar to reset the graph position.</p>
         </div>
+        <br>
         <div class="post-url-container">
           <p>
-            Please paste bellow the URL of a comments page from Reddit:
+            <b>Please paste bellow the URL of a comments page from Reddit:</b>
           </p>
           <form class="form-search" name="post-url-form">
             <input type="text" value="http://www.reddit.com/r/AskReddit/comments/10c96s/i_once_dated_a_young_mother_who_worked_two_jobs/"/>
@@ -57,7 +56,14 @@
         <div class="sigma-parent">
 
           <!-- Here are the canvas elements -->
-          <div class="sigma-container"></div>
+          <div class="sigma-container">
+            <div class="keyboard-on">(Keyboard enabled)</div>
+            <div id="preloader">
+              <div id="preloader_1" class="preloader"></div>
+              <div id="preloader_2" class="preloader"></div>
+              <div id="preloader_3" class="preloader"></div>
+            </div>
+          </div>
 
           <div class="control-panel">
 
