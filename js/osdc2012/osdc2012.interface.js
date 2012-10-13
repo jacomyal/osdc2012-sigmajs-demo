@@ -23,6 +23,9 @@
 (function() {
   'use strict';
 
+  // Fallback in case there is no internet connection:
+  var local = false;
+
   $(document).ready(function() {
     // Circular plugin:
     sigma.publicPrototype.circularize = function() {
@@ -98,7 +101,10 @@
     });
 
     $('form[name="post-url-form"]').submit(function(e){
-      reddit.pageComments($(this).find('input[type="text"]').attr('value'));
+      if(local)
+        reddit.localPageComments('data_sample.json');
+      else
+        reddit.pageComments($(this).find('input[type="text"]').attr('value'));
 
       e.stopPropagation();
       e.preventDefault();
@@ -112,7 +118,10 @@
     });
 
     // Init first loading:
-    reddit.pageComments($(this).find('input[type="text"]').attr('value'));
+    if(local)
+      reddit.localPageComments('data_sample.json');
+    else
+      reddit.pageComments($(this).find('input[type="text"]').attr('value'));
 
     /**
      * NAVIGATION:

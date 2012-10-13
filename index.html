@@ -32,13 +32,6 @@
             Explore Reddit comments network with <span class="sigma">sigma.js</span>    
           </h1>
         </div>
-        <br>
-        <div class="introduction">
-          <p>The graph bellow represents Reddit users who commented the selected Web page. Two user are connected when at least one of them replied to the other.</p>
-          <p>The thickness of an edge is proportional to the number of replies between the two connected users. The size of a user is related to the number of comments he wrote about the selected page.</p>
-          <p>You can navigate through the graph with the arrow keys to move across the graph, +, - to zoom in and out, and the spacebar to reset the graph position.</p>
-        </div>
-        <br>
         <div class="post-url-container">
           <p>
             <b>Please paste bellow the URL of a comments page from Reddit:</b>
@@ -56,8 +49,7 @@
         <div class="sigma-parent">
 
           <!-- Here are the canvas elements -->
-          <div class="sigma-container">
-            <div class="keyboard-on">(Keyboard enabled)</div>
+          <div class="sigma-container" tabindex="0">
             <div id="preloader">
               <div id="preloader_1" class="preloader"></div>
               <div id="preloader_2" class="preloader"></div>
@@ -121,6 +113,18 @@
 
       <!-- More description, footer, etc... -->
       <div id="bottom">
+        <div class="introduction">
+          <p>This graph represents Reddit users who commented the selected post. Two user are connected when at least one of them replied to the other.</p>
+          <p>On Reddit, users can <strong>up</strong> or <strong>down</strong> any comment. The color of the nodes represent the ratio of ups on downs:</p>
+          <ul>
+            <li>If the node is green, it has more ups than downs.</li>
+            <li>If the node is red, it has more downs than ups.</li>
+            <li>If the node is grey, the total sum of ups and downs is low.</li>
+          </ul>
+          <p>The size of a node is related to the number of comments the user wrote about the selected page. The thickness of an edge is proportional to the number of replies between the two connected users.</p>
+          <p>You can navigate through the graph with the arrow keys to move across the graph, +, - to zoom in and out, and the spacebar to reset the graph position. To activate the keyboard navigation, you must first click on the graph to give it the focus.</p>
+        </div>
+        <br>
         <div class="footer">
           This <span class="sigma">sigma.js</span> experiment has been developped by Alexis Jacomy for a talk at the French OSDC 2012.
         </div>

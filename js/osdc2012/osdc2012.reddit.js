@@ -33,7 +33,7 @@
           // COMMENT PERMALINK:
           // Examples:
           //  - http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/c6c1iti
-          regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]+)\/comments\/([^\/]+)\/([^\/]+)\/([^\/]+)\/?/,
+          regex: /^https?:\/\/(?:[^\.\/]*\.)?reddit\.com\/r\/([^\/]+)\/comments\/([^\/]+)\/([^\/]+)\/([^\/]+)\/?/,
           method: function(match) {
             if(!match)
               return false;
@@ -50,7 +50,7 @@
           // COMMENTS PERMALINK:
           // Examples:
           //  - http://www.reddit.com/r/programming/comments/10b7xo/bug_ios6_safari_caches_post_requests/
-          regex: /^https?:\/\/(?:www\.)?reddit\.com\/r\/([^\/]+)\/comments\/([^\/]+)\/([^\/]+)\/?$/,
+          regex: /^https?:\/\/(?:[^\.\/]*\.)?reddit\.com\/r\/([^\/]+)\/comments\/([^\/]+)\/([^\/]+)\/?$/,
           method: function(match) {
             if(!match)
               return false;
@@ -233,6 +233,33 @@
 
     return {};
   };
+
+  // Fallback if no connection:
+  reddit.localPageComments = function(url) {
+    var self = this;
+    self.dispatch('startLoading');
+    $.ajax({
+      url: url,
+      type: 'GET',
+      dataType: 'json',
+      success: function(data){
+        self.dispatch('stopLoading');
+
+        return self.dispatch('pageCommentsLoaded',{
+          graph: getGraph(data)
+        });
+      },
+      error: function(jqXHR, textStatus, errorThrown){
+        ajax_pageComments = null;
+
+        return self.dispatch('pageCommentsFailed',{
+          jqXHR: jqXHR,
+          textStatus: textStatus,
+          errorThrown: errorThrown
+        });
+      }
+    });
+  }
 
   reddit.pageComments = function(entity, options) {
     var o = options || {},
